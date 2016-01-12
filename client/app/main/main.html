@@ -1,0 +1,22 @@
+<div class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      <!--<h1 class="page-header">Infos</h1>-->
+      <ul class="list-group">
+        <li class="list-group-item" ng-repeat="info in infos">
+          <span class="badge" ng-class="(info.value==0)?'alert-danger':'alert-success'" >{{info.value}}</span>
+
+          <button type="button" class="btn btn-default" ng-click="action(info, 'switch')">
+            {{(info.type=='range')?'refresh':'switch'}}
+          </button>
+          <button type="button" class="btn btn-default" ng-if="info.type=='led' || info.type=='buzzer'" ng-click="action(info, 'blink')">blink</button>
+          <span class="glyphicon glyphicon-bell" aria-hidden="true" ng-if="info.type=='buzzer'"></span> 
+          <span class="glyphicon glyphicon-certificate" style="color: {{info.info}}" aria-hidden="true" ng-if="info.type=='led'"></span>
+          <span class="glyphicon glyphicon-signal" aria-hidden="true" ng-if="info.type=='sensor'"></span>
+          <b>{{info.name}}</b> 
+          <i>{{info.info}}</i>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
