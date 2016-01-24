@@ -14,18 +14,28 @@
     "font-awesome": ">=4.1.0",
     "lodash": "~2.4.1",
     "json3": "~3.3.1",
-    "es5-shim": "~3.0.1"
+    "es5-shim": "~3.0.1",
+    "angular-bootstrap-switch": "~0.4.1"
   },
   "devDependencies": {
     "angular-mocks": "1.4.8"
   },
   "overrides": {
-      "bootstrap": {
-          "main": [
-              "dist/js/bootstrap.js",
-              "dist/css/bootstrap.css",
-              "less/bootstrap.less"
-          ]
-      }
+    "bootstrap": {
+      "main": [
+        "dist/js/bootstrap.js",
+        "dist/css/bootstrap.css",
+        "less/bootstrap.less"
+      ]
+    },
+    "font-awesome": {
+        "main": [
+            "./css/font-awesome.css",
+            "./fonts/fontawesome-webfont.eot",
+            "./fonts/fontawesome-webfont.woff",
+            "./fonts/fontawesome-webfont.ttf",
+            "./fonts/fontawesome-webfont.svg"
+        ]
+    }
   }
 }

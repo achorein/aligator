@@ -1,57 +1,64 @@
 'use strict';
 
+var math = require('mathjs');
+
 // https://github.com/clebert/r-pi-usonic
 //var usonic = require('r-pi-usonic');
-var usonic = {sensor: function(){ return function(){return -42;};}}; // mock
+var usonic = {createSensor: function(){ return () => -42;}, init: function(){ return () => null}}; // mock
 
-function ComponentRangeService(){}
-ComponentRangeService.prototype = (function(){
+class ComponentRangeService {
 
-    var ranges = {};
+    constructor() {
+        this.ranges = {};
+        this.sample = 5; // do 5 mesure before compute average
+        usonic.init(err => {
+            if (err) { throw err; }
+        });
+    }
 
-    var getId = function(component) {
+    init(component) {
+        console.log('RANGE: channel ' + this._id(component) + ' setup => ' + component.name);
+        var sensor = usonic.createSensor(component.channel[0], component.channel[1], 1000); // 1000 µs
+        this.ranges[this._id(component)] = {
+            sensor: sensor,
+            callback: null,
+            interval: 100, // ms
+            values: []
+        }
+    }
+
+    value(component) {
+        //console.log('RANGE: channel ' + this._id(component) + ' read value');
+        return this.ranges[this._id(component)].sensor();
+    }
+
+    monitor(component, callback, interval) {
+        //console.log('RANGE: channel ' + this._id(component) + ' monitor');
+        this.ranges[this._id(component)].callback = callback;
+        if (interval) {
+            this.ranges[this._id(component)].interval = interval
+        }
+        this._monitor(component);
+    }
+
+    _id(component) {
         return component.channel[0]+'-'+component.channel[1];
     }
 
-    var monitor = function(component) {
-        setTimeout(function() {
-            var lastValue = ranges[getId(component)].value;
-            self.value(component);
-            if (lastValue !== ranges[getId(component)].value) {
-                ranges[getId(component)].callback(ranges[getId(component)].value);
+    _monitor(component) {
+        setTimeout(() => {
+            this.ranges[this._id(component)].values.push(this.value(component));
+            if (this.ranges[this._id(component)].values.length === this.sample) {
+                // got 5 values, compute average
+                let value = math.mean(this.ranges[this._id(component)].values);
+                component.value = value;
+                this.ranges[this._id(component)].callback(value);
+                // renit
+                this.ranges[this._id(component)].values = [];
             }
-            monitor(component);
-        }, ranges[getId(component)].interval);
+            this._monitor(component);
+        }, this.ranges[this._id(component)].interval);
     }
-
-    var self = {
-        init: function(component) {
-            console.log('RANGE: channel ' + getId(component) + ' setup => ' + component.name);
-            var sensor = usonic.sensor(component.channel[0], component.channel[1], 1000);
-            ranges[getId(component)] = {
-                sensor: sensor,
-                callback: null,
-                interval: 1000,
-                value: -1
-            }
-        },
-        monitor: function(component, callback, interval) {
-            console.log('RANGE: channel ' + getId(component) + ' monitor');
-            ranges[getId(component)].callback = callback;
-            if (interval) {
-                ranges[getId(component)].interval = interval
-            }
-            monitor(component);
-        },
-        value: function(component) {
-            console.log('RANGE: channel ' + getId(component) + ' read value');
-            var value = ranges[getId(component)].sensor();
-            ranges[getId(component)].value = value;
-            component.value = value;
-            return value;
-        }
-    }
-    return self;
-})();
+}
 
 module.exports = new ComponentRangeService();

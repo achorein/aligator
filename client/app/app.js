@@ -7,7 +7,8 @@ angular.module('aligatorApp', [
   'ngResource',
   'ngSanitize',
   'ui.router',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'frapontillo.bootstrap-switch'
 ])
   .config(function($urlRouterProvider, $locationProvider) {
     $urlRouterProvider

@@ -4,15 +4,28 @@
       <!--<h1 class="page-header">Infos</h1>-->
       <ul class="list-group">
         <li class="list-group-item" ng-repeat="info in infos">
-          <span class="badge" ng-class="(info.value==0)?'alert-danger':'alert-success'" >{{info.value}}</span>
+          <span ng-if="info.type=='led' || info.type=='buzzer'" class="pull-right">
+            <input type="checkbox" bs-switch switch-size="small" switch-on-color="success" switch-off-color="default"
+              ng-model="info.value" ng-true-value="1" ng-false-value="0"
+              ng-change="action(info, 'switch')"/>
+            <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
+              ng-click="action(info, 'blink')">
+                <i class="fa fa-bullseye"></i> blink
+            </button>
+          </span>
 
-          <button type="button" class="btn btn-default" ng-click="action(info, 'switch')">
-            {{(info.type=='range')?'refresh':'switch'}}
+          <span class="fa-stack fa-lg" ng-if="info.type=='led'">
+            <i class="fa fa-stack-2x fa-circle"></i>
+            <i class="fa fa-stack-1x fa-lightbulb-o fa-inverse" style="color: {{info.info}}"></i>
+          </span>
+
+
+          <button ng-if="info.type == 'range'" type="button" class="btn btn-default" >
+            refresh
           </button>
-          <button type="button" class="btn btn-default" ng-if="info.type=='led' || info.type=='buzzer'" ng-click="action(info, 'blink')">blink</button>
           <span class="glyphicon glyphicon-bell" aria-hidden="true" ng-if="info.type=='buzzer'"></span> 
-          <span class="glyphicon glyphicon-certificate" style="color: {{info.info}}" aria-hidden="true" ng-if="info.type=='led'"></span>
           <span class="glyphicon glyphicon-signal" aria-hidden="true" ng-if="info.type=='sensor'"></span>
+
           <b>{{info.name}}</b> 
           <i>{{info.info}}</i>
         </li>
