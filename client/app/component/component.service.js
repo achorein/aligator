@@ -6,10 +6,11 @@ angular.module('aligatorApp')
       list: function(params) {
         return RESTSrv.requestSync('component/list', 'GET', params);
       },
-      action: function(params, action) {
+      action: function(id, action, value) {
         var payload = {
-          component: params,
-          action: action
+          id: id,
+          action: action,
+          value: value
         };
         return RESTSrv.requestSync('component/action', 'POST', payload);
       }

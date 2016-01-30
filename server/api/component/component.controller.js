@@ -11,7 +11,7 @@ class ComponentController {
     }
     
     action(req, res) {
-      res.json(service.action(req.body.component, req.body.action));
+      res.json(service.action(req.body.id, req.body.action, req.body.value));
     }
 }
 
