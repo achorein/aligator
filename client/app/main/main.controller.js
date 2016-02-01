@@ -21,6 +21,7 @@ angular.module('aligatorApp')
       'tetris-theme',
       'wedding-march'
     ];
+    $scope.speed = 100;
 
     componentSrv.list().then(function(data){
        $scope.infos = data;

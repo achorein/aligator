@@ -24,13 +24,11 @@
           <!-- BUZZER -->
           <span ng-if="info.type=='buzzer'">
             <span class="pull-right">
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
-                ng-click="action(info, 'stop')">
+              <button type="button" class="btn btn-sm" ng-click="action(info, 'stop')">
                   <i class="fa fa-stop"></i>
               </button>
               <select ng-options="song as song for song in songs" ng-model="song"></select>
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
-                ng-click="action(info, 'song', song)">
+              <button type="button" class="btn btn-sm" ng-click="action(info, 'song', song)">
                   <i class="fa fa-play"></i>
               </button>
             </span>
@@ -43,8 +41,7 @@
           <!-- PROXIMITY -->
           <span ng-if="info.type=='range'">
             <span class="pull-right">
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
-                ng-click="action(info, 'song')">
+              <button type="button" class="btn btn-sm" ng-click="action(info, 'song')">
                   <i class="fa fa-refresh"></i>
               </button>
             </span>
@@ -57,16 +54,17 @@
           <!-- MOTOR -->
           <span ng-if="info.type=='motor'">
             <span class="pull-right">
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
-                ng-click="action(info, 'forward')">
+              <input type="number" ng-model="speed" min="0" max="100" />
+              <button type="button" class="btn btn-sm" ng-class="info.value=='reverse'?'btn-warning':'btn-default'"
+                ng-click="action(info, 'reverse', speed)">
                   <i class="fa fa-arrow-circle-left"></i>
               </button>
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
+              <button type="button" class="btn btn-sm" ng-class="info.value=='stop'?'btn-warning':'btn-default'"
                 ng-click="action(info, 'stop')">
                   <i class="fa fa-stop"></i>
               </button>
-              <button type="button" class="btn btn-sm" ng-class="info.value=='blink'?'btn-warning':'btn-default'"
-                ng-click="action(info, 'reverse')">
+              <button type="button" class="btn btn-sm" ng-class="info.value=='forward'?'btn-warning':'btn-default'"
+                ng-click="action(info, 'forward', speed)">
                   <i class="fa fa-arrow-circle-right"></i>
               </button>
             </span>

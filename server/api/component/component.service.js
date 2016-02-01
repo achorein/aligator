@@ -19,7 +19,7 @@ var LEDWHITE = ['GPIO19', 'GPIO16'];
 var BUZZER = 'GPIO13';
 var RANGE1 = [16,18];
 var RANGE2 = [7,11];
-var MOTOR1 = [12,11,13];
+var MOTOR1 = ['GPIO18','GPIO17','GPIO27'];
 var MOTOR2 = [19,18,22];
 
 // init all gpio components
@@ -35,7 +35,7 @@ var components = {
   ],
   motor: [
     {channel: MOTOR1, name: 'Propulsion', info: 'hbridge', value: 0},
-    {channel: MOTOR2, name: 'Direction', info: 'hbridge', value: 0}
+    //{channel: MOTOR2, name: 'Direction', info: 'hbridge', value: 0}
   ],
   range: [
     {channel: RANGE1, name: 'Range sensor 1', info: 'ultrasonic', value: 0}, 
@@ -91,6 +91,10 @@ class ComponentService {
         });
         components.buzzer.forEach(buzzer => {
             gpios[buzzer.id] = new five.Piezo(buzzer.channel);
+        });
+        components.motor.forEach(motor => {
+            gpios[motor.id] = new five.Motor(motor.channel);
+            gpios[motor.id].stop();
         });
         componentService.action(componentService._getId(LEDGREEN)); // toggle led => on
         componentService.action(componentService._getId(BUZZER), 'song', 'mario-intro');
@@ -169,6 +173,25 @@ class ComponentService {
             gpios[currentComponent.id].play(songs.load(value));
           } else if (action === 'stop') {
             gpios[currentComponent.id].off();
+          }
+      /*
+       * MOTOR
+       */
+      } else if (currentComponent.type === 'motor') {
+          if (action === 'forward') {
+            if (value) {
+                gpios[currentComponent.id].forward(255*value/100);
+            } else {
+                gpios[currentComponent.id].forward(255);
+            }
+          } else if (action === 'reverse') {
+            if (value) {
+                gpios[currentComponent.id].reverse(255*value/100);
+            } else {
+                gpios[currentComponent.id].reverse(255);
+            }
+          } else if (action === 'stop') {
+            gpios[currentComponent.id].stop();
           }
       } else {
         throw Error('type unknown : ' + currentComponent.type);
