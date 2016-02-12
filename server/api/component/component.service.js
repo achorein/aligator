@@ -15,12 +15,12 @@ var rangeSrv = require('./component.range.service');
 var LEDRED = 'GPIO21';
 var LEDYELLOW = 'GPIO20';
 var LEDGREEN = 'GPIO26';
-var LEDWHITE = ['GPIO19', 'GPIO16'];
+var LEDWHITE = ['GPIO6', 'GPIO12'];
 var BUZZER = 'GPIO13';
 var RANGE1 = [16,18];
 var RANGE2 = [7,11];
-var MOTOR1 = ['GPIO18','GPIO17','GPIO27'];
-var MOTOR2 = [19,18,22];
+var MOTOR1 = ['GPIO18','GPIO17','GPIO27']; /*PWM0*/
+var MOTOR2 = ['GPIO19','GPIO23','GPIO22']; /*PWM1*/
 
 // init all gpio components
 var components = {
@@ -34,8 +34,8 @@ var components = {
     {channel: BUZZER, name: 'Piezo', info: 'piezo', value: 0}
   ],
   motor: [
-    {channel: MOTOR1, name: 'Propulsion', info: 'hbridge', value: 0},
-    //{channel: MOTOR2, name: 'Direction', info: 'hbridge', value: 0}
+    {channel: MOTOR1, name: 'Direction', info: 'hbridge', value: 0},
+    {channel: MOTOR2, name: 'Propulsion', info: 'hbridge', value: 0}
   ],
   range: [
     {channel: RANGE1, name: 'Range sensor 1', info: 'ultrasonic', value: 0}, 
@@ -156,7 +156,7 @@ class ComponentService {
               currentComponent.value = 'blink';
             } else {
               currentComponent.value = (currentComponent.value + 1) % 2;
-              gpios[currentComponent.id].stop(); // sto blinking
+              gpios[currentComponent.id].stop(); // stop blinking
               gpios[currentComponent.id].toggle();
             }
       /*
@@ -199,6 +199,22 @@ class ComponentService {
       return currentComponent;
     }
 }
+
+process.on('SIGINT', function() {
+  console.log('SIGINT detected : shutting down system gracefully');
+  components.led.forEach(led => {
+      console.log('- closing ' + led.id + ' (' + led.type + ') => ' + led.name);
+      gpios[led.id].off();
+  });
+  components.buzzer.forEach(buzzer => {
+      gpios[buzzer.id].off;
+      console.log('- closing: ' + buzzer.id + ' (' + buzzer.type + ') => ' + buzzer.name);
+  });
+  components.motor.forEach(motor => {
+      console.log('- closing ' + motor.id + ' (' + motor.type + ') => ' + motor.name);
+      gpios[motor.id].stop();
+  });
+});
 
 var componentService = new ComponentService()
 module.exports = componentService;
