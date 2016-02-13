@@ -1,7 +1,5 @@
 'use strict';
 
-// https://www.npmjs.com/package/rpi-gpio
-//var gpio = require('rpi-gpio');
 var crypto = require('crypto');
 var five = require("johnny-five");
 var Raspi = require("raspi-io");
@@ -10,123 +8,112 @@ var board = new five.Board({
 });
 var songs = require('j5-songs');
 
-var rangeSrv = require('./component.range.service');
-
 var LEDRED = 'GPIO21';
 var LEDYELLOW = 'GPIO20';
 var LEDGREEN = 'GPIO26';
-var LEDWHITE = ['GPIO19', 'GPIO16'];
+var LEDWHITE = ['GPIO5', 'GPIO6'];
 var BUZZER = 'GPIO13';
-var RANGE1 = [16,18];
-var RANGE2 = [7,11];
-var MOTOR1 = ['GPIO18','GPIO17','GPIO27'];
-var MOTOR2 = [19,18,22];
+var RANGE1 = 'GPIO12';
+var RANGE2 = 'GPIO4';
+var MOTOR1 = ['GPIO18','GPIO17','GPIO27']; /*PWM0*/
+var MOTOR2 = ['GPIO19','GPIO23','GPIO22']; /*PWM1*/
 
-// init all gpio components
-var components = {
-  led: [
-    {channel: LEDRED, name: 'Red LED', info: '#ff0000', value: 0}, 
-    {channel: LEDYELLOW, name: 'Yellow LED', info: '#ffff00', value: 0}, 
-    {channel: LEDGREEN, name: 'Green LED', info: '#00ff00', value: 0},
-    {channel: LEDWHITE, name: 'Double White LED', info: '#ffffff', value: 0}, 
-  ],
-  buzzer: [
-    {channel: BUZZER, name: 'Piezo', info: 'piezo', value: 0}
-  ],
-  motor: [
-    {channel: MOTOR1, name: 'Propulsion', info: 'hbridge', value: 0},
-    //{channel: MOTOR2, name: 'Direction', info: 'hbridge', value: 0}
-  ],
-  range: [
-    {channel: RANGE1, name: 'Range sensor 1', info: 'ultrasonic', value: 0}, 
-    {channel: RANGE2, name: 'Range sensor 2', info: 'ultrasonic', value: 0},
-  ]
-};
-
-// loaded gpios (j5)
-var gpios = {};
 
 class ComponentService {
 
     constructor() {
+      // components available for REST services
+      this._components = {
+        led: [
+          {channel: LEDRED, name: 'Red LED', info: '#ff0000', value: 0}, 
+          {channel: LEDYELLOW, name: 'Yellow LED', info: '#ffff00', value: 0}, 
+          {channel: LEDGREEN, name: 'Green LED', info: '#00ff00', value: 0},
+          {channel: LEDWHITE, name: 'Double White LED', info: '#ffffff', value: 0}, 
+        ],
+        buzzer: [
+          {channel: BUZZER, name: 'Piezo', info: 'piezo', value: 0}
+        ],
+        motor: [
+          {channel: MOTOR1, name: 'Direction', info: 'hbridge', value: 0},
+          {channel: MOTOR2, name: 'Propulsion', info: 'hbridge', value: 0}
+        ],
+        range: [
+          {channel: RANGE1, name: 'Range sensor front', info: 'HCSR04', value: 0}, 
+          {channel: RANGE2, name: 'Range sensor back', info: 'HCSR04', value: 0},
+        ]
+      };
+      // cache for loaded internal component from johnny-five
+      this._gpios = {};
 
       // add type on all component
-      //var promise;
-      var types = Object.keys(components);
+      var types = Object.keys(this._components);
       types.forEach(type => {
-          components[type].forEach(component => {
-              component.id = this._getId(component.channel);
+          this._components[type].forEach(component => {
+              component.id = this._get(component.channel);
               component.type = type;
               console.log('- registered: ' + component.id + ' (' + component.type + ') => ' + component.name)
-              /*if (component.channel instanceof Array) {
-                let id = '';
-                component.channel.forEach(channel => {
-                  id += '|'+channel;
-                });
-                component.id = id;
-              } else {
-                component.id = component.channel;
-              }*/
-              /*var newPromise;
-              if (type === 'range') {
-                  newPromise = rangeSrv.init(component);
-              }
-              if (newPromise) {
-                if (!promise) {
-                    promise = newPromise;
-                } else {
-                    promise = promise.then(() => {
-                        return newPromise;
-                    })
-                }
-              }*/
           })
       });
 
       // wait for init finished and set default values
       board.on("ready", () => {
         console.log('> Board ready !');
-        components.led.forEach(led => {
-            gpios[led.id] = new five.Led(led.channel);
+        // LEDs
+        self._components.led.forEach(led => {
+            self._gpios[led.id] = new five.Led(led.channel);
         });
-        components.buzzer.forEach(buzzer => {
-            gpios[buzzer.id] = new five.Piezo(buzzer.channel);
+        // BUZZER / PIEZO
+        self._components.buzzer.forEach(buzzer => {
+            self._gpios[buzzer.id] = new five.Piezo(buzzer.channel);
         });
-        components.motor.forEach(motor => {
-            gpios[motor.id] = new five.Motor(motor.channel);
-            gpios[motor.id].stop();
+        // MOTORS
+        self._components.motor.forEach(motor => {
+            self._gpios[motor.id] = new five.Motor(motor.channel);
+            self._gpios[motor.id].stop();
         });
-        componentService.action(componentService._getId(LEDGREEN)); // toggle led => on
-        componentService.action(componentService._getId(BUZZER), 'song', 'mario-intro');
-      });
+        // RANGE SENSOR / PROXIMITY
+        /*self._components.range.forEach(function(range){
+            self._gpios[range.id] = new five.Proximity({
+              controller: "HCSR04",
+              pin: range.channel,
+              freq: '25ms'
+            });
+        });
 
-      // manage mood on range change
-      /*rangeSrv.monitor(components.range[0], function(value) {
-        if (value >= 0 && value < 10) { // angry
-          ledSrv.on(components.led[0]); // red
-          ledSrv.off(components.led[1]); // yellow
-          ledSrv.off(components.led[2]); // green
-        } else if (value >= 0 && value < 100) { // unhappy
-          ledSrv.off(components.led[0]);
-          ledSrv.on(components.led[1]);
-          ledSrv.off(components.led[2]);
-        } else { // happy
-          ledSrv.off(components.led[0]);
-          ledSrv.off(components.led[1]);
-          ledSrv.on(components.led[2]);
-        }
-      }, 100);*/
+        // manage mood on range change
+        self._gpios[self._get(RANGE1)].on("data", function() {
+            var current = self._find(self._get(RANGE1));
+            current.value = this.cm;
+            if (this.cm >= 0 && this.cm <= 10) { // angry
+                self.action(self._get(LEDRED), "on");
+                self.action(self._get(LEDYELLOW), "off");
+                self.action(self._get(LEDGREEN), "off");
+            } else if (this.cm > 0 && this.cm < 100) { // unhappy
+                self.action(self._get(LEDRED), "off");
+                self.action(self._get(LEDYELLOW), "on");
+                self.action(self._get(LEDGREEN), "off");
+            } else { // happy
+                self.action(self._get(LEDRED), "off");
+                self.action(self._get(LEDYELLOW), "off");
+                self.action(self._get(LEDGREEN), "on");
+            }
+        });*/
+
+        // Default action
+        self.action(self._get(LEDGREEN)); // toggle led => on
+        self.action(self._get(BUZZER), 'song', 'mario-intro');
+      });
     }
 
-    _getId(channel) {
+    _get(channel) {
       return crypto.createHash('md5').update(channel.toString()).digest('hex');
     }
 
-    _findComponent(componentId) {
+    _find(componentId) {
       var result = null;
-      var types = Object.keys(components);
+      var types = Object.keys(this._components);
       types.forEach(type => {
-          components[type].forEach(component => {
+          this._components[type].forEach(component => {
             if (component.id === componentId) {
               result = component;
             }
@@ -137,68 +124,91 @@ class ComponentService {
 
     componentList() {
       var result = [];
-      result = result.concat(components.led);
-      result = result.concat(components.buzzer);
-      result = result.concat(components.motor);
-      result = result.concat(components.range);
+      result = result.concat(this._components.led);
+      result = result.concat(this._components.buzzer);
+      result = result.concat(this._components.motor);
+      result = result.concat(this._components.range);
       return result;
     }
 
     action(componentId, action, value) {
-      var currentComponent = this._findComponent(componentId);
-      if (!currentComponent) { throw Error('component not found ' + componentId); }
+      var current = this._find(componentId);
+      if (!current) { throw Error('component not found ' + componentId); }
       /*
        * LED
        */
-      if (currentComponent.type === 'led') {
+      if (current.type === 'led') {
             if (action === 'blink') {
-              gpios[currentComponent.id].blink(500);
-              currentComponent.value = 'blink';
+              if (!value) {
+                value = 500;
+              }
+              this._gpios[current.id].blink(value);
+              current.value = 'blink';
+            } else if (action === 'on') {
+              this._gpios[current.id].stop(); // stop blinking
+              this._gpios[current.id].on(); // stop blinking
+              current.value = 1;
+            } else if (action === 'off') {
+              this._gpios[current.id].stop(); // stop blinking
+              this._gpios[current.id].off(); // stop blinking
+              current.value = 1;
             } else {
-              currentComponent.value = (currentComponent.value + 1) % 2;
-              gpios[currentComponent.id].stop(); // sto blinking
-              gpios[currentComponent.id].toggle();
+              current.value = (current.value + 1) % 2;
+              this._gpios[current.id].stop(); // stop blinking
+              this._gpios[current.id].toggle();
             }
-      /*
-       * RANGE
-       */
-     /* } else if (currentComponent.type === 'range') {
-          currentComponent.value = rangeSrv.value(currentComponent);*/
       /*
        * BUZZER
        */
-      } else if (currentComponent.type === 'buzzer') {
+      } else if (current.type === 'buzzer') {
           if (action === 'song') {
-            gpios[currentComponent.id].off();
-            gpios[currentComponent.id].play(songs.load(value));
+            this._gpios[current.id].off(); // stop current note
+            this._gpios[current.id].play(songs.load(value)); // play a song
           } else if (action === 'stop') {
-            gpios[currentComponent.id].off();
+            this._gpios[current.id].off(); // stop current note
           }
       /*
        * MOTOR
        */
-      } else if (currentComponent.type === 'motor') {
+      } else if (current.type === 'motor') {
           if (action === 'forward') {
             if (value) {
-                gpios[currentComponent.id].forward(255*value/100);
+                this._gpios[current.id].forward(255*value/100);
             } else {
-                gpios[currentComponent.id].forward(255);
+                this._gpios[current.id].forward(255);
             }
           } else if (action === 'reverse') {
             if (value) {
-                gpios[currentComponent.id].reverse(255*value/100);
+                this._gpios[current.id].reverse(255*value/100);
             } else {
-                gpios[currentComponent.id].reverse(255);
+                this._gpios[current.id].reverse(255);
             }
           } else if (action === 'stop') {
-            gpios[currentComponent.id].stop();
+            this._gpios[current.id].stop();
           }
       } else {
-        throw Error('type unknown : ' + currentComponent.type);
+        throw Error('type unknown : ' + current.type);
       }
-      return currentComponent;
+      return current;
     }
 }
 
-var componentService = new ComponentService()
-module.exports = componentService;
+// Handler for SIGINT (Ctrl+c) in order to shutdown everything
+process.on('SIGINT', function() {
+  console.log('SIGINT detected : shutting down system gracefully');
+  this._components.led.forEach(led => {
+      console.log('- closing ' + led.id + ' (' + led.type + ') => ' + led.name);
+      this._gpios[led.id].off();
+  });
+  this._components.buzzer.forEach(buzzer => {
+      this._gpios[buzzer.id].off;
+      console.log('- closing: ' + buzzer.id + ' (' + buzzer.type + ') => ' + buzzer.name);
+  });
+  this._components.motor.forEach(motor => {
+      console.log('- closing ' + motor.id + ' (' + motor.type + ') => ' + motor.name);
+      this._gpios[motor.id].stop();
+  });
+});
+
+var self = new ComponentService()
+module.exports = self;
