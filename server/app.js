@@ -11,8 +11,10 @@ import http from 'http';
 // Setup server
 var app = express();
 var server = http.createServer(app);
+var WebSocketServer = require('ws').Server;
+var wss = new WebSocketServer({server: server, path: "/ws"});
 require('./config/express')(app);
-require('./routes')(app);
+require('./routes')(app, wss);
 
 // Start server
 function startServer() {

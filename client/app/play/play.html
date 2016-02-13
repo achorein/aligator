@@ -1,0 +1,14 @@
+<div class="container">
+  <div class="row">
+    <div class="col-lg-5">
+      Play !
+    </div>
+    <div class="console col-lg-5">
+      <p ng-repeat="line in console">
+        <span class="alert-danger">[{{line.date | date:'medium'}}]</span>
+        <span class="alert-warning">[{{line.type}}]</span>
+        > {{line.data | json | limitTo: 100}}
+      </p>
+    </div>
+  </div>
+</div>

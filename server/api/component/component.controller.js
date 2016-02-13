@@ -1,9 +1,32 @@
 'use strict';
 
-var service = require('./component.service');
+var service = require('./component.service')
+var url = require('url')
 
 class ComponentController {
-    constructor() {
+    constructor(wss) {
+        wss.on("connection", function(ws){
+            //var location = url.parse(ws.upgradeReq.url, true);
+            ws.on('message', function incoming(message) {
+                console.log('received: %s', message);
+                let query = JSON.parse(message);
+                if (query.call === 'list') {
+                    ws.send(JSON.stringify({
+                        type:'list', 
+                        date: new Date(),
+                        data: service.componentList()
+                    }));
+                } else if (query.call === 'action') {
+                    ws.send(JSON.stringify({
+                        type: 'component', 
+                        date: new Date(),
+                        data: service.action(query.data)
+                    }));
+                } else {
+                    ws.send(JSON.stringify({error: 'bad request !'}));
+                }
+            });
+        });
     }
     
     list(req, res) {
@@ -15,4 +38,4 @@ class ComponentController {
     }
 }
 
-module.exports = new ComponentController();
+module.exports = (wss) => { return new ComponentController(wss) };

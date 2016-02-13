@@ -1,11 +1,12 @@
 'use strict';
 
-var express = require('express');
-var controller = require('./component.controller');
+module.exports = (wss) => {
+    var express = require('express');
+    var controller = require('./component.controller')(wss);
 
-var router = express.Router();
+    var router = express.Router();
 
-router.get('/list', controller.list);
-router.post('/action', controller.action);
-
-module.exports = router;
+    router.get('/list', controller.list);
+    router.post('/action', controller.action);
+    return router;
+};

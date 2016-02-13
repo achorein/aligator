@@ -1,0 +1,8 @@
+.console {
+  background: black; 
+  color: white; 
+  min-height: 300px; 
+  overflow: auto;
+  font-family: 'Courier New';
+  font-size: 0.9em;
+}

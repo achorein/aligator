@@ -20,8 +20,8 @@
     "morgan": "~1.6.1",
     "q": "^1.4.1",
     "raspi-io": "^5.2.0",
-    "rpi-gpio": "^0.7.0",
-    "serve-favicon": "^2.3.0"
+    "serve-favicon": "^2.3.0",
+    "ws": "^1.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^6.0.0",
