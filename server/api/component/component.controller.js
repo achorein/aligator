@@ -10,17 +10,17 @@ class ComponentController {
             ws.on('message', function incoming(message) {
                 console.log('received: %s', message);
                 let query = JSON.parse(message);
-                if (query.call === 'list') {
+                if (query.proc === 'list') {
                     ws.send(JSON.stringify({
                         type:'list', 
                         date: new Date(),
                         data: service.componentList()
                     }));
-                } else if (query.call === 'action') {
+                } else if (query.proc === 'action') {
                     ws.send(JSON.stringify({
                         type: 'component', 
                         date: new Date(),
-                        data: service.action(query.data)
+                        data: service.action(query.data.id, query.data.action, query.data.value)
                     }));
                 } else {
                     ws.send(JSON.stringify({error: 'bad request !'}));

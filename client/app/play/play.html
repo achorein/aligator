@@ -1,7 +1,30 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-5">
-      Play !
+      <div>
+          <joystick coords="coords" on-move="joystickMove()" />
+      </div>
+      <div>
+        Mood 
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-stack-2x fa-circle"></i>
+          <i class="fa fa-stack-1x fa-smile-o fa-inverse" style="color: {{mood}}"></i>
+        </span>
+      </div>
+      <div ng-click="action(lights.id ,'toggle')" class="button-cursor">
+        Lights 
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-stack-2x fa-circle"></i>
+          <i class="fa fa-stack-1x fa-sun-o fa-inverse" style="color: {{lights.color}}"></i>
+        </span>
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-stack-2x fa-circle"></i>
+          <i class="fa fa-stack-1x fa-sun-o fa-inverse" style="color: {{lights.color}}"></i>
+        </span>
+      </div>
+      <div>
+        {{rangefront}} cm | {{rangeback}} cm
+      </div>
     </div>
     <div class="console col-lg-5">
       <p ng-repeat="line in console">
