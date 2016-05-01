@@ -41,7 +41,8 @@
           <!-- PROXIMITY -->
           <span ng-if="info.type=='range'">
             <span class="pull-right">
-              <button type="button" class="btn btn-sm" ng-click="action(info, 'song')">
+              {{info.value}}
+              <button type="button" class="btn btn-sm" ng-click="action(info, 'refresh')">
                   <i class="fa fa-refresh"></i>
               </button>
             </span>
@@ -51,7 +52,7 @@
             </span>
           </span>
 
-          <!-- MOTOR -->
+          <!-- MOTOR DC -->
           <span ng-if="info.type=='motor'">
             <span class="pull-right">
               <input type="number" ng-model="speed" min="0" max="100" />
@@ -71,6 +72,22 @@
             <span class="fa-stack fa-lg">
               <i class="fa fa-stack-2x fa-circle"></i>
               <i class="fa fa-stack-1x fa-motorcycle fa-inverse"></i>
+            </span>
+          </span>
+
+          <!-- MOTOR SERVO -->
+          <span ng-if="info.type=='servo'">
+            <span class="pull-right">
+              {{info.value}}
+              <input type="number" ng-model="angle" min="0" max="180" />
+              <button type="button" class="btn btn-sm btn-default"
+                ng-click="action(info, 'angle', angle)">
+                  <i class="fa fa-play"></i>
+              </button>
+            </span>
+            <span class="fa-stack fa-lg">
+              <i class="fa fa-stack-2x fa-circle"></i>
+              <i class="fa fa-stack-1x fa-car fa-inverse"></i>
             </span>
           </span>
 

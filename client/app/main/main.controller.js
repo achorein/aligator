@@ -22,6 +22,7 @@ angular.module('aligatorApp')
       'wedding-march'
     ];
     $scope.speed = 100;
+    $scope.angle = 90;
 
     componentSrv.list().then(function(data){
        $scope.infos = data;

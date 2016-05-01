@@ -3,7 +3,7 @@
 
 angular.module('aligatorApp.constants', [])
 
-.constant('appConfig', {userRoles:['guest','user','admin']})
+.constant('appConfig', {backendHost:'172.21.1.91',backendPort:9000,userRoles:['guest','user','admin']})
 
 ;
 })(angular);

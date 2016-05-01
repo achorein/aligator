@@ -8,7 +8,7 @@ class ComponentController {
         wss.on("connection", function(ws){
             //var location = url.parse(ws.upgradeReq.url, true);
             ws.on('message', function incoming(message) {
-                console.log('received: %s', message);
+                //console.log('received: %s', message);
                 let query = JSON.parse(message);
                 if (query.proc === 'list') {
                     ws.send(JSON.stringify({

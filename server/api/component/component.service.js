@@ -11,12 +11,12 @@ var songs = require('j5-songs');
 var LEDRED = 'GPIO21';
 var LEDYELLOW = 'GPIO20';
 var LEDGREEN = 'GPIO26';
-var LEDWHITE = ['GPIO5', 'GPIO6'];
+var LEDWHITE = 'GPIO16';
 var BUZZER = 'GPIO13';
-var RANGE1 = 'GPIO12';
-var RANGE2 = 'GPIO4';
-var MOTOR1 = ['GPIO18','GPIO17','GPIO27']; /*PWM0*/
-var MOTOR2 = ['GPIO19','GPIO23','GPIO22']; /*PWM1*/
+var RANGE1 = 'GPIO6';
+var RANGE2 = 'GPIO12';
+var MOTORDC1 = ['GPIO18','GPIO17','GPIO27']; /*PWM0*/
+var MOTORSERVO1 = 'GPIO19'; /*PWM1*/
 
 
 class ComponentService {
@@ -34,8 +34,10 @@ class ComponentService {
           {channel: BUZZER, name: 'Piezo', info: 'piezo', value: 0}
         ],
         motor: [
-          {channel: MOTOR1, name: 'Direction', info: 'hbridge', value: 0},
-          {channel: MOTOR2, name: 'Propulsion', info: 'hbridge', value: 0}
+          {channel: MOTORDC1, name: 'Propulsion DC', info: 'hbridge lego pf motor xl', value: 0},
+        ],
+        servo: [
+          {channel: MOTORSERVO1, name: 'Direction Servo', info: 'SG90', value: 0}
         ],
         range: [
           {channel: RANGE1, name: 'Range sensor front', info: 'HCSR04', value: 0}, 
@@ -51,8 +53,8 @@ class ComponentService {
           this._components[type].forEach(component => {
               component.id = this._get(component.channel);
               component.type = type;
-              console.log('- registered: ' + component.id + ' (' + component.type + ') => ' + component.name)
-          })
+              console.log('- registered: ' + component.id + ' (' + component.type + ') => ' + component.name);
+          });
       });
 
       // wait for init finished and set default values
@@ -66,10 +68,19 @@ class ComponentService {
         self._components.buzzer.forEach(buzzer => {
             self._gpios[buzzer.id] = new five.Piezo(buzzer.channel);
         });
-        // MOTORS
+        // MOTORS HBRIDGE
         self._components.motor.forEach(motor => {
             self._gpios[motor.id] = new five.Motor(motor.channel);
             self._gpios[motor.id].stop();
+        });
+        // MOTORS SERVO
+        self._components.servo.forEach(servo => {
+            self._gpios[servo.id] = new five.Servo({
+              pin: servo.channel, 
+              pwmRange: [500,2400],
+              startAt: 90
+            });
+            //self._gpios[servo.id].stop();
         });
         // RANGE SENSOR / PROXIMITY
         /*self._components.range.forEach(function(range){
@@ -101,7 +112,8 @@ class ComponentService {
 
         // Default action
         self.action(self._get(LEDGREEN)); // toggle led => on
-        self.action(self._get(BUZZER), 'song', 'mario-intro');
+        //self.action(self._get(BUZZER), 'song', 'mario-intro');
+        //self._gpios[self._get(MOTORSERVO1)].sweep();
       });
     }
 
@@ -127,6 +139,7 @@ class ComponentService {
       result = result.concat(this._components.led);
       result = result.concat(this._components.buzzer);
       result = result.concat(this._components.motor);
+      result = result.concat(this._components.servo);
       result = result.concat(this._components.range);
       return result;
     }
@@ -139,9 +152,9 @@ class ComponentService {
        */
       if (current.type === 'led') {
             if (action === 'blink') {
-              if (!value) {
-                value = 500;
-              }
+              // limits
+              if (!value) { value = 500; }
+
               this._gpios[current.id].blink(value);
               current.value = 'blink';
             } else if (action === 'on') {
@@ -151,11 +164,11 @@ class ComponentService {
             } else if (action === 'off') {
               this._gpios[current.id].stop(); // stop blinking
               this._gpios[current.id].off(); // stop blinking
-              current.value = 1;
+              current.value = 0;
             } else {
-              current.value = (current.value + 1) % 2;
               this._gpios[current.id].stop(); // stop blinking
               this._gpios[current.id].toggle();
+              current.value = (current.value + 1) % 2;
             }
       /*
        * BUZZER
@@ -168,10 +181,21 @@ class ComponentService {
             this._gpios[current.id].off(); // stop current note
           }
       /*
-       * MOTOR
+       * PROXIMITY
+       */
+      } else if (current.type === 'range') {
+          // only refresh data (send current component as response)
+      /*
+       * MOTOR DC
        */
       } else if (current.type === 'motor') {
-          if (action === 'forward') {
+          // limits 
+          if (value && value > 100) { value = 100; }
+          else if (value && value < 0) { value = 0; }
+
+          if (action === 'stop' || value === 0) {
+            this._gpios[current.id].stop();
+          } else if (action === 'forward') {
             if (value) {
                 this._gpios[current.id].forward(255*value/100);
             } else {
@@ -183,9 +207,25 @@ class ComponentService {
             } else {
                 this._gpios[current.id].reverse(255);
             }
+          }
+          current.value = value;
+      /*
+       * MOTOR SERVO
+       */
+      } else if (current.type === 'servo') {
+          if (action === 'angle') {
+            // limits
+            if (!value && value !== 0) { value = 90; } 
+            else if (value < 0) { value = 0; } 
+            else if (value > 180) { value = 180; }
+
+            this._gpios[current.id].to(value);
+          } else if (action === 'sweep') {
+            this._gpios[current.id].sweep();
           } else if (action === 'stop') {
             this._gpios[current.id].stop();
           }
+          current.value = value;
       } else {
         throw Error('type unknown : ' + current.type);
       }
@@ -201,7 +241,7 @@ process.on('SIGINT', function() {
       this._gpios[led.id].off();
   });
   this._components.buzzer.forEach(buzzer => {
-      this._gpios[buzzer.id].off;
+      this._gpios[buzzer.id].off();
       console.log('- closing: ' + buzzer.id + ' (' + buzzer.type + ') => ' + buzzer.name);
   });
   this._components.motor.forEach(motor => {
@@ -210,5 +250,5 @@ process.on('SIGINT', function() {
   });
 });
 
-var self = new ComponentService()
+var self = new ComponentService();
 module.exports = self;
