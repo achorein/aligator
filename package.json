@@ -19,7 +19,7 @@
     "method-override": "^2.3.5",
     "morgan": "~1.6.1",
     "q": "^1.4.1",
-    "raspi-io": "^5.2.0",
+    "raspi-io": "^6.0.1",
     "serve-favicon": "^2.3.0",
     "ws": "^1.0.1"
   },
