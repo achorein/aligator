@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('aligatorApp')
-.factory("websocketUrl",[function () {
-    var url = "ws://localhost:9000/ws";
+.factory("websocketUrl",["appConfig", function (appConfig) {
+    var url = "ws://"+appConfig.backendHost+":"+appConfig.backendPort+"/ws";
     console.log("Using new connection: " + url);
     return url;
 }])

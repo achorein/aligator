@@ -72,6 +72,7 @@ angular.module('aligatorApp')
                     _coords.x = 0;
                     _coords.y = 0;
                     self.renderSprite();
+                    self.triggerChange();
                 },
                 move: function(evt){
                     if(state === INACTIVE){

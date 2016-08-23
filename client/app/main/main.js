@@ -4,7 +4,7 @@ angular.module('aligatorApp')
   .config(function($stateProvider) {
     $stateProvider
       .state('main', {
-        url: '/',
+        url: '/dashboard',
         templateUrl: 'app/main/main.html',
         controller: 'MainController',
         controllerAs: 'main'

@@ -190,7 +190,7 @@ class ComponentService {
        */
       } else if (current.type === 'motor') {
           // limits 
-          if (value && value > 100) { value = 100; }
+          if (value && value > 0) { value = 100; }
           else if (value && value < 0) { value = 0; }
 
           if (action === 'stop' || value === 0) {

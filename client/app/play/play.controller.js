@@ -7,6 +7,8 @@ angular.module('aligatorApp')
     $scope.rangefront = -1;
     $scope.rangeback = -1;
     $scope.coords = {x: 0, y: 0};
+    $scope.direction = -1;
+    $scope.propulsion = -1;
 
     $scope.console = [];
 
@@ -43,7 +45,15 @@ angular.module('aligatorApp')
             $scope.rangeback = component.value;
           }
         }
-    }
+        /* DIRECTION */
+        else if(component.type === 'servo') {
+          $scope.direction = component;
+        }
+        /* PROPULSTION */
+        else if(component.type === 'motor') {
+          $scope.propulsion = component;
+        }
+    };
 
     // Listen for web socket update
     $connection.listen(function(msg) {
@@ -80,6 +90,24 @@ angular.module('aligatorApp')
 
     $scope.joystickMove = function() {
       //console.log('joystickMove ! ' + JSON.stringify($scope.coords));
+      var msg = {
+        proc: 'action', 
+        data: {
+          id: $scope.direction.id, 
+          action: 'angle', 
+          value: $scope.coords.x*180/(38*2)+90
+        }
+      };
+      $connection.send(msg);
+      var msg = {
+        proc: 'action', 
+        data: {
+          id: $scope.propulsion.id, 
+          action: $scope.coords.y >=0?'forward':'reverse', 
+          value: Math.abs($scope.coords.y)>38/2?Math.abs($scope.coords.y)*100/38:0
+        }
+      };
+      $connection.send(msg);
     };
 
     // Request via websocket to get component list
