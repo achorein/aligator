@@ -7,4 +7,4 @@ ALIGATOR (Automatic Lego devIce for GAme over resT pOweR) est un projet dont le 
 
 <img src="http://blog.v1kings.io/wp-content/uploads/2017/05/aligator_hardware.jpg" height="200"/>
 
-Read more : http://blog.v1kings.io/category/aligator/
+Read more : http://www.v1kings.io/categories/aligator/
